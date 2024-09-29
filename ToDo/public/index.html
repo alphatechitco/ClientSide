@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Task Tracker</title>
+    <style>
+        /* General body and page styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to right, #0f2027, #2c5364);
+            color: white;
+            padding: 20px;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Heading */
+        h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: fadeIn 1s ease-in-out;
+            background-color: black;
+        }
+
+        /* Input fields and buttons styling */
+        input, button, select {
+            padding: 10px;
+            margin: 10px;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Hover effects */
+        input:hover, button:hover, select:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        /* Button styling */
+        button {
+            background-color: black;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background-color: #3498db;
+        }
+
+        /* Task list styling */
+        ul {
+            list-style-type: none;
+            padding: 0;
+            max-width: 600px;
+            margin: 20px auto;
+        }
+
+        li {
+            padding: 15px;
+            margin: 10px 0;
+            background: #fff;
+            color: #333;
+            border-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, background-color 0.2s ease;
+        }
+
+        li:hover {
+            transform: scale(1.02);
+        }
+
+        li.completed {
+            text-decoration: line-through;
+            color: gray;
+            background: #e0e0e0;
+        }
+
+        .task-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .priority {
+            font-size: 14px;
+            color: #ff6347;
+        }
+
+        .due {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .timer {
+            font-size: 12px;
+            color: #ff0000;
+        }
+
+        /* Footer styling */
+        footer {
+            background-color: black;
+            color: white;
+            padding: 20px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        footer a1 {
+            color: goldenrod;
+            text-decoration: none;
+        }
+        footer p{
+            color: white;
+        }
+        footer a{
+            color: white;
+        }
+
+        /* Keyframes for fade-in animation */
+        @keyframes fadeIn {
+            0% { opacity: 0; transform: translateY(-20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive design */
+        @media screen and (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 32px;
+            }
+            input, button, select {
+                padding: 8px;
+                margin: 5px;
+                font-size: 14px;
+            }
+            ul {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Focus Flow</h1>
+    <div class="input-group">
+        <input type="text" id="todoInput" placeholder="New task...">
+        <input type="date" id="dueDateInput">
+        <select id="categorySelect">
+            <option value="Work">Work</option>
+            <option value="Personal">Personal</option>
+            <option value="Urgent">Urgent</option>
+        </select>
+        <select id="prioritySelect">
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+        </select>
+        <button onclick="addTodo()">Add Task</button>
+    </div>
+
+    <ul id="todoList"></ul>
+
+    <footer>
+        <p>© 2024 Focus Flow by <a href="https://alphatechitco.netlify.app">Alpha Tech</a></p>
+    </footer>
+
+    <script>
+        let todoList = JSON.parse(localStorage.getItem('todos')) || [];
+
+        document.addEventListener('DOMContentLoaded', displayTodos);
+
+        // Colors based on category
+        const categoryColors = {
+            "Work": "linear-gradient(135deg, #1f4037, #99f2c8)",
+            "Personal": "linear-gradient(135deg, #42275a, #734b6d)",
+            "Urgent": "linear-gradient(135deg, #e53935, #e35d5b)"
+        };
+
+        // Add task to the list
+        function addTodo() {
+            const todoText = document.getElementById('todoInput').value;
+            const priority = document.getElementById('prioritySelect').value;
+            const dueDate = document.getElementById('dueDateInput').value;
+            const category = document.getElementById('categorySelect').value;
+
+            if (todoText) {
+                const categoryObj = todoList.find(cat => cat.category === category);
+                if (categoryObj) {
+                    categoryObj.tasks.push({ task: todoText, priority: priority, dueDate: dueDate, completed: false });
+                } else {
+                    todoList.push({ category: category, tasks: [{ task: todoText, priority: priority, dueDate: dueDate, completed: false }] });
+                }
+                displayTodos();
+                clearInputs();
+                localStorage.setItem('todos', JSON.stringify(todoList));
+            }
+        }
+
+        // Clear input fields
+        function clearInputs() {
+            document.getElementById('todoInput').value = '';
+            document.getElementById('dueDateInput').value = '';
+        }
+
+        // Display tasks in the list
+        function displayTodos() {
+            const list = document.getElementById('todoList');
+            list.innerHTML = '';
+            todoList.forEach((categoryObj) => {
+                const categoryTitle = document.createElement('h3');
+                categoryTitle.textContent = categoryObj.category;
+                list.appendChild(categoryTitle);
+
+                categoryObj.tasks.forEach((todo, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div class="task-details">
+                            <span>${todo.task}</span>
+                            <span class="priority">Priority: ${todo.priority}</span>
+                            <span class="due">Due: ${todo.dueDate}</span>
+                            ${generateTimer(todo.dueDate)}
+                        </div>
+                        <div>
+                            <button onclick="toggleComplete('${categoryObj.category}', ${index})">${todo.completed ? 'Undo' : 'Complete'}</button>
+                            <button onclick="deleteTask('${categoryObj.category}', ${index})">Delete</button>
+                        </div>
+                    `;
+                    li.className = todo.completed ? 'completed' : '';
+                    li.style.background = categoryColors[categoryObj.category];
+                    list.appendChild(li);
+                });
+            });
+        }
+
+        // Timer for tasks due today or tomorrow
+        function generateTimer(dueDate) {
+            const due = new Date(dueDate);
+            const today = new Date();
+            const timeDiff = due.getTime() - today.getTime();
+            const daysRemaining = Math.ceil(timeDiff / (1000 * 3600 * 24));
+
+            if (daysRemaining === 0) {
+                return `<span class="timer">Due Today!</span>`;
+            } else if (daysRemaining === 1) {
+                return `<span class="timer">Due Tomorrow!</span>`;
+            }
+            return '';
+        }
+
+        // Toggle task completion
+        function toggleComplete(category, index) {
+            const categoryObj = todoList.find(cat => cat.category === category);
+            if (categoryObj) {
+                categoryObj.tasks[index].completed = !categoryObj.tasks[index].completed;
+                displayTodos();
+                localStorage.setItem('todos', JSON.stringify(todoList));
+            }
+        }
+
+        // Delete task
+        function deleteTask(category, index) {
+            const categoryObj = todoList.find(cat => cat.category === category);
+            if (categoryObj) {
+                categoryObj.tasks.splice(index, 1);
+                if (categoryObj.tasks.length === 0) {
+                    todoList = todoList.filter(cat => cat.category !== category);
+                }
+                displayTodos();
+                localStorage.setItem('todos', JSON.stringify(todoList));
+            }
+        }
+    </script>
+</body>
+</html>
